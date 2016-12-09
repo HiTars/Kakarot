@@ -1,0 +1,10 @@
+.project
+.settings
+.classpath
+target
+
+# LeanCloud
+.avoscloud
+.leancloud
+.idea
+*.iml

@@ -2,16 +2,16 @@ package cn.leancloud.demo.todo;
 
 import cn.leancloud.EngineFunction;
 import cn.leancloud.EngineFunctionParam;
-import com.avos.avoscloud.AVException;
-import com.avos.avoscloud.AVObject;
-import com.avos.avoscloud.AVQuery;
+import com.avos.avoscloud.*;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import lombok.Data;
 import okhttp3.*;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -153,6 +153,7 @@ public class Cloud {
     _StakeInfo stakeInfo = gson.fromJson(response.body().string(), _StakeInfo.class);
     logger.info(gson.toJson(stakeInfo));
     if ("SUCCESS".equals(stakeInfo.getStatus())) {
+      String pushMsg = "";
       for (_TeamInfo teamInfo: stakeInfo.getResult().get(0).getTeam_info()) {
         String name = teamInfo.getTerm_name();
         AVObject term;
@@ -160,7 +161,7 @@ public class Cloud {
           term = stakeMap.get(name);
           if (!term.getString("status").equals(teamInfo.getTerm_status())) {
             term.put("status", teamInfo.getTerm_status());
-            logger.info("Changed: " + name);
+            pushMsg += (StringUtils.isBlank(pushMsg) ? "" : "\n") + teamInfo.getStatusStr() + ": " + name;
           }
         } else {
           term = new AVObject("StakeTerm");
@@ -176,6 +177,26 @@ public class Cloud {
         } catch (AVException e) {
           logger.warn("AVException", e);
         }
+      }
+      if (!StringUtils.isBlank(pushMsg)) {
+        logger.info(pushMsg);
+        AVPush push = new AVPush();
+        JSONObject object = new JSONObject();
+        object.put("alert", pushMsg);
+        object.put("sound", "default");
+        push.setPushToIOS(true);
+        push.setProductionMode(false);
+        push.setData(object);
+        push.sendInBackground(new SendCallback() {
+          @Override
+          public void done(AVException e) {
+            if (e == null) {
+              logger.info("Push Success");
+            } else {
+              // something wrong.
+            }
+          }
+        });
       }
     } else {
       if ("11".equals(stakeInfo.getErrNum())) {
@@ -225,6 +246,14 @@ public class Cloud {
     Long order_time;
     Integer term_type;
     //String ac_name;
+    public String getStatusStr() {
+      if ("02".equals(term_status)) {
+        return "空闲";
+      } else if ("04".equals(term_status)) {
+        return "充电";
+      }
+      return term_status;
+    }
   }
 
   private static Gson newGson() {

@@ -2,62 +2,36 @@ package cn.org.tars.kakarot;
 
 import cn.leancloud.EngineFunction;
 import cn.leancloud.EngineFunctionParam;
+import cn.org.tars.kakarot.data.StakeTerm;
+import cn.org.tars.kakarot.data.Todo;
 import com.avos.avoscloud.*;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+@Slf4j
 public class Cloud {
 
-    private static final Logger logger = LogManager.getLogger(Cloud.class);
-
-    private static final Gson gson = newGson();
+    private static final CookieJar cookieJar = new CloudCookieJar();
 
     private static final HashMap<String, AVObject> stakeMap = new HashMap<>();
 
-    private static final ArrayListMultimap<String, AVObject> cookieMap = ArrayListMultimap.create();
-
     static {
         // Load StakeMap
-        AVQuery<AVObject> termQuery = new AVQuery<>("StakeTerm");
-        termQuery.whereNotEqualTo("type", 0);
-        List<AVObject> terms = new ArrayList<>();
-        try {
-            terms = termQuery.find();
-        } catch (AVException e) {
-            logger.warn("AVException", e);
-        }
-        for (AVObject term : terms) {
+        for (AVObject term : StakeTerm.getAllStakes()) {
             stakeMap.put(term.getString("name"), term);
-        }
-
-        // Load cookies map
-        AVQuery<AVObject> cookieQuery = new AVQuery<>("Cookie");
-        cookieQuery.whereNotEqualTo("domain", "");
-        List<AVObject> cookies = new ArrayList<>();
-        try {
-            cookies = cookieQuery.find();
-        } catch (AVException e) {
-            logger.warn("AVException", e);
-        }
-        for (AVObject cookie : cookies) {
-            cookieMap.put(cookie.getString("domain"), cookie);
         }
     }
 
     @EngineFunction("hello")
     public static String hello() {
-        logger.info("Hello world");
+        log.info("Hello world");
         return "Hello world!";
     }
 
@@ -83,57 +57,7 @@ public class Cloud {
     @EngineFunction("stakeInfo")
     public static void getStakeInfo() throws Exception {
         OkHttpClient client = new OkHttpClient().newBuilder()
-                .cookieJar(new CookieJar() {
-
-                    @Override
-                    public void saveFromResponse(HttpUrl httpUrl, List<Cookie> list) {
-                        List<AVObject> cookies = cookieMap.get(httpUrl.host());
-                        for (Cookie newCookie : list) {
-                            boolean found = false;
-                            for (int i = 0; i < cookies.size(); i++) {
-                                AVObject oldCookie = cookies.get(i);
-                                if (oldCookie.getString("name").equals(newCookie.name())) {
-                                    if (!oldCookie.getString("value").equals(newCookie.value())) {
-                                        oldCookie.put("value", newCookie.value());
-                                        oldCookie.put("raw", gson.toJson(newCookie));
-                                        try {
-                                            oldCookie.save();
-                                        } catch (AVException e) {
-                                            logger.warn("AVException", e);
-                                        }
-                                    }
-                                    found = true;
-                                    break;
-                                }
-                            }
-                            if (!found) {
-                                AVObject cookie = new AVObject("Cookie");
-                                cookie.put("domain", newCookie.domain());
-                                cookie.put("name", newCookie.name());
-                                cookie.put("value", newCookie.value());
-                                cookie.put("raw", gson.toJson(newCookie));
-                                cookieMap.put(httpUrl.host(), cookie);
-                                try {
-                                    cookie.save();
-                                } catch (AVException e) {
-                                    logger.warn("AVException", e);
-                                }
-                            }
-                        }
-                        logger.info("save: " + list);
-                    }
-
-                    @Override
-                    public List<Cookie> loadForRequest(HttpUrl httpUrl) {
-                        List<AVObject> cookies = cookieMap.get(httpUrl.host());
-                        List<Cookie> ret = new ArrayList<>();
-                        for (AVObject cookie : cookies) {
-                            ret.add(gson.fromJson(cookie.getString("raw"), Cookie.class));
-                        }
-                        logger.info("load: " + ret);
-                        return ret;
-                    }
-                })
+                .cookieJar(cookieJar)
                 .build();
 
         login(client);
@@ -150,8 +74,8 @@ public class Cloud {
                 .build();
 
         Response response = client.newCall(request).execute();
-        _StakeInfo stakeInfo = gson.fromJson(response.body().string(), _StakeInfo.class);
-        logger.info(gson.toJson(stakeInfo));
+        _StakeInfo stakeInfo = KakarotUtils.gson.fromJson(response.body().string(), _StakeInfo.class);
+        log.info(KakarotUtils.gson.toJson(stakeInfo));
         if ("SUCCESS".equals(stakeInfo.getStatus())) {
             String pushMsg = "";
             for (_TeamInfo teamInfo : stakeInfo.getResult().get(0).getTeam_info()) {
@@ -175,11 +99,11 @@ public class Cloud {
                 try {
                     term.save();
                 } catch (AVException e) {
-                    logger.warn("AVException", e);
+                    log.warn("AVException", e);
                 }
             }
             if (!StringUtils.isBlank(pushMsg)) {
-                logger.info(pushMsg);
+                log.info(pushMsg);
                 AVPush push = new AVPush();
                 JSONObject object = new JSONObject();
                 object.put("alert", pushMsg);
@@ -191,16 +115,12 @@ public class Cloud {
                     @Override
                     public void done(AVException e) {
                         if (e == null) {
-                            logger.info("Push Success");
+                            log.info("Push Success");
                         } else {
                             // something wrong.
                         }
                     }
                 });
-            }
-        } else {
-            if ("11".equals(stakeInfo.getErrNum())) {
-                logger.info(gson.toJson(stakeInfo));
             }
         }
     }
@@ -255,16 +175,6 @@ public class Cloud {
             }
             return term_status;
         }
-    }
-
-    private static Gson newGson() {
-        GsonBuilder builder = new GsonBuilder();
-        builder.setVersion(0.1);
-        return builder.create();
-    }
-
-    public static void main(String[] argsf) throws Exception {
-        getStakeInfo();
     }
 
 }

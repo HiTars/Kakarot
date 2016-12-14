@@ -1,4 +1,4 @@
-package cn.org.tars.kakarot;
+package cn.org.tars.kakarot.data;
 
 import com.alibaba.fastjson.JSON;
 import com.avos.avoscloud.AVClassName;

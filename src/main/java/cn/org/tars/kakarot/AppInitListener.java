@@ -1,6 +1,9 @@
 package cn.org.tars.kakarot;
 
 import cn.leancloud.LeanEngine;
+import cn.org.tars.kakarot.data.CookieTerm;
+import cn.org.tars.kakarot.data.StakeTerm;
+import cn.org.tars.kakarot.data.Todo;
 import com.avos.avoscloud.AVObject;
 import com.avos.avoscloud.internal.impl.JavaRequestSignImplementation;
 import org.apache.logging.log4j.LogManager;
@@ -28,6 +31,8 @@ public class AppInitListener implements ServletContextListener {
         logger.info("LeanEngine app init.");
         // 注册子类化
         AVObject.registerSubclass(Todo.class);
+        AVObject.registerSubclass(CookieTerm.class);
+        AVObject.registerSubclass(StakeTerm.class);
         // 初始化AVOSCloud，请保证在整个项目中间只初始化一次
         LeanEngine.initialize(appId, appKey, appMasterKey);
         // 在请求签名中使用masterKey以激活云代码的最高权限

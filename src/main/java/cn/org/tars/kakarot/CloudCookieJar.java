@@ -42,7 +42,11 @@ public class CloudCookieJar implements CookieJar {
                 }
             }
             if (!found) {
-                CookieTerm cookie = new CookieTerm(newCookie);
+                CookieTerm cookie = new CookieTerm();
+                cookie.put("domain", newCookie.domain());
+                cookie.put("name", newCookie.name());
+                cookie.put("value", newCookie.value());
+                cookie.put("raw", KakarotUtils.gson.toJson(newCookie));
                 try {
                     cookie.save();
                     cookieMap.put(httpUrl.host(), cookie);

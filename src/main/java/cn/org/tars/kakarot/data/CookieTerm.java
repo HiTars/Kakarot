@@ -32,13 +32,6 @@ public class CookieTerm extends AVObject {
         return cookies;
     }
 
-    public CookieTerm(Cookie cookie) {
-        put("domain", cookie.domain());
-        put("name", cookie.name());
-        put("value", cookie.value());
-        put("raw", KakarotUtils.gson.toJson(cookie));
-    }
-
     public Cookie getCookie() {
         return KakarotUtils.gson.fromJson(getString("raw"), Cookie.class);
     }

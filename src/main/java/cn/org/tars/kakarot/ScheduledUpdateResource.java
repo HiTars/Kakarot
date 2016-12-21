@@ -1,6 +1,7 @@
 package cn.org.tars.kakarot;
 
-import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -12,9 +13,9 @@ import java.util.concurrent.TimeUnit;
  * @author zhumeng
  * @since 2016/12/18
  */
-
-@Slf4j
 public abstract class ScheduledUpdateResource<T> {
+
+    private static final Logger logger = LogManager.getLogger(ScheduledUpdateResource.class);
 
     protected T resource;
     private boolean firstFetch = false;
@@ -42,7 +43,7 @@ public abstract class ScheduledUpdateResource<T> {
             try {
                 resource = fetch();
             } catch (Exception e) {
-                log.warn("frist fetch failed", e);
+                logger.warn("frist fetch failed", e);
             }
         }
 
@@ -52,7 +53,7 @@ public abstract class ScheduledUpdateResource<T> {
                     try {
                         resource = fetch();
                     } catch (Exception e) {
-                        log.warn("scheduled fetch failed", e);
+                        logger.warn("scheduled fetch failed", e);
                     }
                 }, intervalInMillis, intervalInMillis, TimeUnit.MILLISECONDS);
     }

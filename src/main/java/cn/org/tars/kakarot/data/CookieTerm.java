@@ -5,8 +5,9 @@ import com.avos.avoscloud.AVClassName;
 import com.avos.avoscloud.AVException;
 import com.avos.avoscloud.AVObject;
 import com.avos.avoscloud.AVQuery;
-import lombok.extern.slf4j.Slf4j;
 import okhttp3.Cookie;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,9 +18,10 @@ import java.util.List;
  * @author zhumeng
  * @since 2016/12/14
  */
-@Slf4j
 @AVClassName("Cookie")
 public class CookieTerm extends AVObject {
+
+    private static final Logger logger = LogManager.getLogger(CookieTerm.class);
 
     public static List<CookieTerm> getAllCookies() {
         AVQuery<CookieTerm> query = AVObject.getQuery(CookieTerm.class);
@@ -27,7 +29,7 @@ public class CookieTerm extends AVObject {
         try {
             cookies = query.find();
         } catch (AVException e) {
-            log.warn("AVException", e);
+            logger.warn("AVException", e);
         }
         return cookies;
     }
@@ -43,7 +45,7 @@ public class CookieTerm extends AVObject {
             try {
                 save();
             } catch (AVException e) {
-                log.warn("AVException", e);
+                logger.warn("AVException", e);
             }
             return true;
         } else {

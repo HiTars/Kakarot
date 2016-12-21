@@ -4,7 +4,8 @@ import com.avos.avoscloud.AVClassName;
 import com.avos.avoscloud.AVException;
 import com.avos.avoscloud.AVObject;
 import com.avos.avoscloud.AVQuery;
-import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,9 +16,10 @@ import java.util.List;
  * @author zhumeng
  * @since 2016/12/14
  */
-@Slf4j
 @AVClassName("StakeTerm")
 public class StakeTerm extends AVObject {
+
+    private static final Logger logger = LogManager.getLogger(StakeTerm.class);
 
     public static List<StakeTerm> getAllStakes() {
         AVQuery<StakeTerm> query = AVObject.getQuery(StakeTerm.class);
@@ -25,7 +27,7 @@ public class StakeTerm extends AVObject {
         try {
             stakes = query.find();
         } catch (AVException e) {
-            log.warn("AVException", e);
+            logger.warn("AVException", e);
         }
         return stakes;
     }

@@ -3,10 +3,11 @@ package cn.org.tars.kakarot;
 import cn.org.tars.kakarot.data.CookieTerm;
 import com.avos.avoscloud.AVException;
 import com.google.common.collect.ArrayListMultimap;
-import lombok.extern.slf4j.Slf4j;
 import okhttp3.Cookie;
 import okhttp3.CookieJar;
 import okhttp3.HttpUrl;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,8 +18,9 @@ import java.util.List;
  * @author zhumeng
  * @since 2016/12/14
  */
-@Slf4j
 public class CloudCookieJar implements CookieJar {
+
+    private static final Logger logger = LogManager.getLogger(CloudCookieJar.class);
 
     private static final ArrayListMultimap<String, CookieTerm> cookieMap = ArrayListMultimap.create();
 
@@ -51,11 +53,11 @@ public class CloudCookieJar implements CookieJar {
                     cookie.save();
                     cookieMap.put(httpUrl.host(), cookie);
                 } catch (AVException e) {
-                    log.warn("AVException", e);
+                    logger.warn("AVException", e);
                 }
             }
         }
-        log.info("save: " + list);
+        logger.info("save: " + list);
     }
 
     @Override
@@ -65,7 +67,7 @@ public class CloudCookieJar implements CookieJar {
         for (CookieTerm cookie : cookies) {
             ret.add(cookie.getCookie());
         }
-        log.info("load: " + ret);
+        logger.info("load: " + ret);
         return ret;
     }
 }

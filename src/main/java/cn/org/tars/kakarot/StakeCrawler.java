@@ -4,9 +4,10 @@ import cn.org.tars.kakarot.data.StakeTerm;
 import com.avos.avoscloud.AVException;
 import com.avos.avoscloud.AVObject;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.List;
@@ -17,8 +18,9 @@ import java.util.List;
  * @author zhumeng
  * @since 2016/12/18
  */
-@Slf4j
 public class StakeCrawler {
+
+    private static final Logger logger = LogManager.getLogger(StakeCrawler.class);
 
     private static final HashMap<String, AVObject> stakeMap = new HashMap<>();
 
@@ -45,7 +47,7 @@ public class StakeCrawler {
 
         Response response = KakarotUtils.client.newCall(request).execute();
         _StakeInfo stakeInfo = KakarotUtils.gson.fromJson(response.body().string(), _StakeInfo.class);
-        log.info(KakarotUtils.gson.toJson(stakeInfo));
+        logger.info(KakarotUtils.gson.toJson(stakeInfo));
         String pushMsg = "";
         if ("SUCCESS".equals(stakeInfo.getStatus())) {
             for (_TeamInfo teamInfo : stakeInfo.getResult().get(0).getTeam_info()) {
@@ -69,7 +71,7 @@ public class StakeCrawler {
                 try {
                     term.save();
                 } catch (AVException e) {
-                    log.warn("AVException", e);
+                    logger.warn("AVException", e);
                 }
             }
         }
@@ -89,7 +91,7 @@ public class StakeCrawler {
                 .url("http://114.215.85.38/appInterface/F40")
                 .post(formBody)
                 .build();
-        client.newCall(request).execute();
+        client.newCall(request).execute().close();
     }
 
     @Data

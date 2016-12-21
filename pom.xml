@@ -58,6 +58,7 @@
             <version>1.16.12</version>
             <scope>provided</scope>
         </dependency>
+        <!-- leancloud 资源有限，减少包引入
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -78,6 +79,7 @@
             <artifactId>log4j-slf4j-impl</artifactId>
             <version>2.7</version>
         </dependency>
+        -->
     </dependencies>
 
     <build>

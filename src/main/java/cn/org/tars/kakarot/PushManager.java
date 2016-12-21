@@ -8,7 +8,8 @@ package cn.org.tars.kakarot;
 import com.avos.avoscloud.AVException;
 import com.avos.avoscloud.AVObject;
 import com.avos.avoscloud.AVQuery;
-import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,8 +20,9 @@ import java.util.List;
  * @author zhumeng
  * @since 2016/12/18
  */
-@Slf4j
 public class PushManager {
+
+    private static final Logger logger = LogManager.getLogger(PushManager.class);
 
     public static boolean checkInstallationChannel(String channel) {
         AVQuery<AVObject> query = new AVQuery<>("_Installation");
@@ -29,9 +31,9 @@ public class PushManager {
         try {
             insts = query.find();
         } catch (AVException e) {
-            log.warn("AVException", e);
+            logger.warn("AVException", e);
         }
-        log.info("checkInstallationChannel: " + insts.size());
+        logger.info("checkInstallationChannel: " + insts.size());
         return insts.size() > 0;
     }
 

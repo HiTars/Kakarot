@@ -33,7 +33,7 @@ public class PushManager {
         } catch (AVException e) {
             logger.warn("AVException", e);
         }
-        logger.info("checkInstallationChannel: " + insts.size());
+        logger.info("checkInstallationChannel: " + channel + ", " + insts.size());
         return insts.size() > 0;
     }
 

@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * StakeTerm
+ * StakeTerm, NOTE: 需要在AppInitListener类中注册
  *
  * @author zhumeng
  * @since 2016/12/14
